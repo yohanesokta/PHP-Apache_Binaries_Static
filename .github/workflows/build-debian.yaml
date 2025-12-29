@@ -35,9 +35,9 @@ jobs:
       - name: Make build script executable
         run: |
           chmod +x ./setup.sh
-          ls
 
       - name: Run build Apache + PHP
+        shell: bash
         run: |
           ./setup.sh || true
 
