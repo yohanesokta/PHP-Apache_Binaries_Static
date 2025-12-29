@@ -1,0 +1,53 @@
+name: Build Apache + PHP (Debian 12)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:12
+      options: --privileged
+
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install base tools
+        run: |
+          apt update
+          apt install -y sudo lsb-release
+
+      - name: Verify Debian version
+        run: |
+          lsb_release -a
+          test "$(lsb_release -cs)" = "bookworm"
+
+      - name: Make build script executable
+        run: |
+          chmod +x build.sh
+
+      - name: Run build Apache + PHP
+        run: |
+          ./setup.sh || true
+
+      - name: Verify Apache & PHP build result
+        run: |
+          /opt/runtime/apache/bin/httpd -v
+          /opt/runtime/php/bin/php -v
+          /opt/runtime/php/bin/php -m
+
+      - name: Upload runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apache-php-runtime
+          path: /opt/runtime
