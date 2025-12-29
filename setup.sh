@@ -89,7 +89,7 @@ if [ ! -x "$RUNTIME_DIR/apache/bin/apxs" ]; then
   exit 1
 fi
 
-echo "✅ apxs ditemukan"
+echo "apxs ditemukan"
 
 # =========================
 # BUILD PHP
@@ -163,8 +163,3 @@ EOF
 echo "Test run Apache + PHP"
 
 "$RUNTIME_DIR/apache/bin/httpd" -t
-
-echo "Starting Apache (CTRL+C untuk stop)..."
-echo "http://localhost:8080"
-
-"$RUNTIME_DIR/apache/bin/httpd" -DFOREGROUND

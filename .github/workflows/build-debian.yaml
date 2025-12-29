@@ -1,5 +1,8 @@
 name: Build Apache + PHP (Debian 12)
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ "main" ]
@@ -35,17 +38,59 @@ jobs:
       - name: Make build script executable
         run: |
           chmod +x ./setup.sh
+          chmod +x ./configuration.sh
+          chmod +x ./depends.sh
+
 
       - name: Run build Apache + PHP
         shell: bash
         run: |
           ./setup.sh || true
 
+      - name: Run configuration script
+        shell: bash
+        run: |
+          ./configuration.sh
+          
+      - name: Run depends script
+        shell: bash
+        run: |
+          ./depends.sh
+
       - name: Verify Apache & PHP build result
         run: |
           /opt/runtime/apache/bin/httpd -v
           /opt/runtime/php/bin/php -v
           /opt/runtime/php/bin/php -m
+      
+      - name: Generate release tag
+        id: tag
+        run: |
+          TAG="build-$(date +'%Y%m%d')-${GITHUB_RUN_NUMBER}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release (draft)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Apache + PHP Runtime ${{ steps.tag.outputs.tag }}
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Archive runtime
+        run: |
+          tar czf apache-php-runtime.tar.gz -C /opt runtime
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: apache-php-runtime.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
